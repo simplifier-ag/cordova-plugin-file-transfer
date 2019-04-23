@@ -43,6 +43,7 @@ import org.apache.cordova.CordovaPlugin;
 import org.apache.cordova.CordovaResourceApi;
 import org.apache.cordova.CordovaResourceApi.OpenForReadResult;
 import org.apache.cordova.LOG;
+import org.apache.cordova.PermissionHelper;
 import org.apache.cordova.PluginManager;
 import org.apache.cordova.PluginResult;
 import org.apache.cordova.Whitelist;
@@ -51,8 +52,11 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.Manifest;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
+import android.util.Log;
 import android.webkit.CookieManager;
 
 public class FileTransfer extends CordovaPlugin {
@@ -67,6 +71,12 @@ public class FileTransfer extends CordovaPlugin {
     public static int CONNECTION_ERR = 3;
     public static int ABORTED_ERR = 4;
     public static int NOT_MODIFIED_ERR = 5;
+
+    private static final int PERMISSION_WRITE_UPLOAD = 84523;
+    private static final int PERMISSION_WRITE_DOWNLOAD = 84524;
+    private CallbackContext mCallbackContext = null;
+
+    private JSONArray mArgs = null;
 
     private static HashMap<String, RequestContext> activeRequests = new HashMap<String, RequestContext>();
     private static final int MAX_BUFFER_SIZE = 16 * 1024;
@@ -165,6 +175,18 @@ public class FileTransfer extends CordovaPlugin {
     @Override
     public boolean execute(String action, JSONArray args, final CallbackContext callbackContext) throws JSONException {
         if (action.equals("upload") || action.equals("download")) {
+            if (!PermissionHelper.hasPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+                mArgs = args;
+                mCallbackContext = callbackContext;
+                PermissionHelper.requestPermission(this,
+                        action.equals("upload") ? PERMISSION_WRITE_UPLOAD : PERMISSION_WRITE_DOWNLOAD,
+                        Manifest.permission.WRITE_EXTERNAL_STORAGE);
+                return true;
+            }
+
+            mArgs = null;
+            mCallbackContext = null;
+
             String source = args.getString(0);
             String target = args.getString(1);
 
@@ -927,6 +949,32 @@ public class FileTransfer extends CordovaPlugin {
                     }
                 }
             });
+        }
+    }
+
+    @Override
+    public void onRequestPermissionResult(int requestCode, String[] permissions, int[] grantResults) throws JSONException {
+        if(requestCode == PERMISSION_WRITE_DOWNLOAD || requestCode == PERMISSION_WRITE_UPLOAD) {
+            for (int i = 0; i < grantResults.length; ++i) {
+                int grant         = grantResults[i];
+                String permission = permissions[i];
+                if (grant == PackageManager.PERMISSION_DENIED
+                        && permission.equalsIgnoreCase(Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+                    mCallbackContext.error("Permission WRITE_EXTERNAL_STORAGE required");
+                    return;
+                }
+            }
+
+            try {
+                execute(requestCode == PERMISSION_WRITE_UPLOAD ? "upload" : "download",
+                        mArgs,
+                        mCallbackContext);
+            } catch (Exception e) {
+                Log.e(LOG_TAG, e.getMessage(), e);
+                mCallbackContext.error(e.getMessage());
+            }
+        } else {
+            super.onRequestPermissionResult(requestCode, permissions, grantResults);
         }
     }
 }
