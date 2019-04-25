@@ -960,7 +960,9 @@ public class FileTransfer extends CordovaPlugin {
                 String permission = permissions[i];
                 if (grant == PackageManager.PERMISSION_DENIED
                         && permission.equalsIgnoreCase(Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
-                    mCallbackContext.error("Permission WRITE_EXTERNAL_STORAGE required");
+
+                    JSONObject error = createFileTransferError(0, null, null, null, null, new Throwable("Permission WRITE_EXTERNAL_STORAGE required"));
+                    mCallbackContext.sendPluginResult(new PluginResult(PluginResult.Status.ERROR, error));
                     return;
                 }
             }
