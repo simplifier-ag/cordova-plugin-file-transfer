@@ -38,6 +38,7 @@ import java.util.Iterator;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.Inflater;
 
+import org.apache.cordova.AllowListPlugin;
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaPlugin;
 import org.apache.cordova.CordovaResourceApi;
@@ -46,7 +47,6 @@ import org.apache.cordova.LOG;
 import org.apache.cordova.PermissionHelper;
 import org.apache.cordova.PluginManager;
 import org.apache.cordova.PluginResult;
-import org.apache.cordova.Whitelist;
 import org.apache.cordova.file.FileUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -709,9 +709,10 @@ public class FileTransfer extends CordovaPlugin {
         }
         if (shouldAllowRequest == null) {
             try {
-                Method gwl = webView.getClass().getMethod("getWhitelist");
-                Whitelist whitelist = (Whitelist)gwl.invoke(webView);
-                shouldAllowRequest = whitelist.isUrlWhiteListed(source);
+                //TODO
+                Method gwl = webView.getClass().getMethod("getAllowListPlugin");
+                AllowListPlugin allowListPlugin =  (AllowListPlugin)gwl.invoke(webView);
+                shouldAllowRequest = allowListPlugin.shouldAllowNavigation(source);
             } catch (NoSuchMethodException e) {
             } catch (IllegalAccessException e) {
             } catch (InvocationTargetException e) {
