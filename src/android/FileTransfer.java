@@ -23,6 +23,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -698,11 +699,6 @@ public class FileTransfer extends CordovaPlugin {
             return;
         }
 
-        /* This code exists for compatibility between 3.x and 4.x versions of Cordova.
-         * Previously the CordovaWebView class had a method, getWhitelist, which would
-         * return a Whitelist object. Since the fixed whitelist is removed in Cordova 4.x,
-         * the correct call now is to shouldAllowRequest from the plugin manager.
-         */
         Boolean shouldAllowRequest = null;
         if (isLocalTransfer) {
             shouldAllowRequest = true;
@@ -718,25 +714,13 @@ public class FileTransfer extends CordovaPlugin {
             } catch (InvocationTargetException e) {
             }
         }
-        if (shouldAllowRequest == null) {
-            try {
-                Method gpm = webView.getClass().getMethod("getPluginManager");
-                PluginManager pm = (PluginManager)gpm.invoke(webView);
-                Method san = pm.getClass().getMethod("shouldAllowRequest", String.class);
-                shouldAllowRequest = (Boolean)san.invoke(pm, source);
-            } catch (NoSuchMethodException e) {
-            } catch (IllegalAccessException e) {
-            } catch (InvocationTargetException e) {
-            }
-        }
 
         if (!Boolean.TRUE.equals(shouldAllowRequest)) {
-            LOG.w(LOG_TAG, "Source URL is not in white list: '" + source + "'");
+            LOG.w(LOG_TAG, "The Source URL is not in the Allow List: '" + source + "'");
             JSONObject error = createFileTransferError(CONNECTION_ERR, source, target, null, 401, null);
             callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.IO_EXCEPTION, error));
             return;
         }
-
 
         final RequestContext context = new RequestContext(source, target, callbackContext);
         synchronized (activeRequests) {
@@ -831,7 +815,7 @@ public class FileTransfer extends CordovaPlugin {
                             // write bytes to file
                             byte[] buffer = new byte[MAX_BUFFER_SIZE];
                             int bytesRead = 0;
-                            outputStream = resourceApi.openOutputStream(targetUri);
+                            outputStream = new FileOutputStream(file);
                             while ((bytesRead = inputStream.read(buffer)) > 0) {
                                 outputStream.write(buffer, 0, bytesRead);
                                 // Send a progress event.
