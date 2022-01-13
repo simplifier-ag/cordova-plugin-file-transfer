@@ -708,11 +708,11 @@ public class FileTransfer extends CordovaPlugin {
             try {
                 Method gpm = webView.getClass().getMethod("getPluginManager");
                 PluginManager pm = (PluginManager)gpm.invoke(webView);
-                Method san = pm.getClass().getMethod("shouldAllowRequest", String.class);
-                shouldAllowRequest = (Boolean)san.invoke(pm, source);
-            } catch (NoSuchMethodException e) {
-            } catch (IllegalAccessException e) {
-            } catch (InvocationTargetException e) {
+                if (pm != null) {
+                    shouldAllowRequest = pm.shouldAllowRequest(source);
+                }
+            } catch (Exception e) {
+                LOG.e(LOG_TAG, e.getMessage(), e);
             }
         }
 
