@@ -703,15 +703,16 @@ public class FileTransfer extends CordovaPlugin {
         if (isLocalTransfer) {
             shouldAllowRequest = true;
         }
+
         if (shouldAllowRequest == null) {
             try {
-                //TODO
-                Method gwl = webView.getClass().getMethod("getAllowListPlugin");
-                AllowListPlugin allowListPlugin =  (AllowListPlugin)gwl.invoke(webView);
-                shouldAllowRequest = allowListPlugin.shouldAllowNavigation(source);
-            } catch (NoSuchMethodException e) {
-            } catch (IllegalAccessException e) {
-            } catch (InvocationTargetException e) {
+                Method gpm = webView.getClass().getMethod("getPluginManager");
+                PluginManager pm = (PluginManager)gpm.invoke(webView);
+                if (pm != null) {
+                    shouldAllowRequest = pm.shouldAllowRequest(source);
+                }
+            } catch (Exception e) {
+                LOG.e(LOG_TAG, e.getMessage(), e);
             }
         }
 
