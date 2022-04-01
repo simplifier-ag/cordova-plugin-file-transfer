@@ -322,6 +322,19 @@ static CFIndex WriteDataToStream(NSData* data, CFWriteStreamRef stream)
         [self uploadData:fileData command:command];
         return;
     }
+    
+    CDVViewController *vc = (CDVViewController *)self.viewController;
+    NSDictionary *settings = [vc settings];
+    NSString *scheme = [settings[@"scheme"] lowercaseString];
+    NSString *hostname = [settings[@"hostname"] lowercaseString];
+    if(hostname == nil){
+        hostname = @"localhost";
+    }
+    NSString *CDV_Converted_Uri_Prefix = [NSString stringWithFormat:@"%@://%@/_app_file_", scheme, hostname];
+    //Revert converted URI
+    if([source hasPrefix:CDV_Converted_Uri_Prefix]) {
+        source = [source stringByReplacingOccurrencesOfString:CDV_Converted_Uri_Prefix withString:@""];
+    }
 
     CDVFilesystemURL *sourceURL = [CDVFilesystemURL fileSystemURLWithString:source];
     NSObject<CDVFileSystem> *fs;
