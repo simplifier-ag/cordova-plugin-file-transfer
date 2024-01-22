@@ -13,6 +13,3 @@ Thumbs.db
 *.user
 
 node_modules
-/.idea/
-.idea/
-cordova-plugin-file-transfer.iml
