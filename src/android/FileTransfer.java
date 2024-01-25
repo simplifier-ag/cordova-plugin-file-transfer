@@ -528,6 +528,7 @@ public class FileTransfer extends CordovaPlugin {
 						LOG.e(LOG_TAG, "Failed after uploading " + totalBytes + " of " + fixedLength + " bytes.");
 						LOG.e(LOG_TAG, error.toString(), e);
 						context.sendPluginResult(new PluginResult(PluginResult.Status.IO_EXCEPTION, error));
+                        return;
 					} finally {
 						synchronized (context) {
 							context.connection = null;
