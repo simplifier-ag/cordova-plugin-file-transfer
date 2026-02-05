@@ -21,9 +21,7 @@
 #import "CDVFileTransfer.h"
 #import "CDVLocalFilesystem.h"
 
-#import <AssetsLibrary/ALAsset.h>
-#import <AssetsLibrary/ALAssetRepresentation.h>
-#import <AssetsLibrary/ALAssetsLibrary.h>
+// AssetsLibrary imports removed - not used and deprecated in iOS 26
 #import <CFNetwork/CFNetwork.h>
 
 #ifndef DLog
